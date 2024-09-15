@@ -2,6 +2,8 @@
 
 This is a simple snake game built with Python.
 
+![Logo](logosnake.png)
+
 ## Features
 
 - Classic snake game mechanics
@@ -15,25 +17,17 @@ This is a simple snake game built with Python.
 - The game will end when the snake hits the edge of the screen or the snake itself
 - Press 'SPACE' to pause the game
 
+![Gameplay](Snake-Gameplay.png)
+
 ## Menu Controls
 
 - Up and down arrow keys to select the colors and speed.
 - Press enter to select the colors, speed, and start the game.
--Color Previews are on the side.
+- Color Previews are on the side.
 
 
 
-![Snake Game Menu](Menu-Image.png)
-
-To add this image to your README:
-
-1. Take a screenshot of your game in action.
-2. Save the screenshot as "snake_game_preview.png" in the same directory as your README.md file.
-3. Make sure the image file is committed and pushed to your GitHub repository along with the other game files.
-
-The image will now appear in your README on GitHub, providing visitors with a visual preview of your Snake game.
-
-
+![Snake Game Menu](Menu-Image2.png)
 
 ## How to Download and Run the Game
 

@@ -4,11 +4,26 @@ import pygame
 
 # Initialize Pygame
 pygame.init()
+
 # Set up the game window
 width = 800
 height = 600
 window = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Snake Game")
+
+# Full-screen toggle variable
+is_fullscreen = False
+
+# Function to toggle full-screen
+def toggle_fullscreen():
+    global is_fullscreen, window
+    if is_fullscreen:
+        window = pygame.display.set_mode((width, height))  # Windowed mode
+    else:
+        # Get the current screen resolution
+        info = pygame.display.Info()
+        window = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)  # Full-screen mode
+    is_fullscreen = not is_fullscreen
 
 # Colors
 def hex_to_rgb(hex_color):
@@ -77,33 +92,66 @@ def message(msg, color, y_offset=None):
     mesg = font.render(msg, True, color)
     if y_offset is None:
         y_offset = height / 3
-    window.blit(mesg, [width / 6, y_offset])
+    # Center the message horizontally
+    msg_rect = mesg.get_rect(center=(width / 2, y_offset))
+    window.blit(mesg, msg_rect)
 
 def show_score_and_speed(score, speed, top_score):
-    # Score display
+    # Set a common height for all displays at the top
+    common_height = 0
+
+    # Score display at the left of the screen
     score_surface = font.render(f'Score: {score}', True, current_scheme["SCORE_COLOR"])
-    score_rect = score_surface.get_rect()
-    score_rect.topleft = (10, 10)
+    score_rect = score_surface.get_rect(topleft=(10, common_height))  # Position for score at the top left
     window.blit(score_surface, score_rect)
 
-    # Speed display
+    # Speed display at the center of the screen
     speed_text = "Slow" if speed == 5 else "Medium" if speed == 10 else "Fast"
     speed_surface = font.render(f'Speed: {speed_text}', True, current_scheme["SCORE_COLOR"])
-    speed_rect = speed_surface.get_rect()
-    speed_rect.topright = (width - 10, 10)
+    speed_rect = speed_surface.get_rect(center=(width // 2, common_height + 20))  # Adjusted position for speed
     window.blit(speed_surface, speed_rect)
 
-    # Top score display
+    # Top score display at the right of the screen
     top_score_surface = font.render(f'Top Score: {top_score}', True, current_scheme["SCORE_COLOR"])
-    top_score_rect = top_score_surface.get_rect()
-    top_score_rect.topright = (width - 10, 50)  # Adjusted position
+    top_score_rect = top_score_surface.get_rect(topright=(width - 10, common_height))  # Position for top score at the top right
     window.blit(top_score_surface, top_score_rect)
 
-def draw_text(text, font, color, surface, x, y):
-    textobj = font.render(text, 1, color)
-    textrect = textobj.get_rect()
-    textrect.topleft = (x, y)
-    surface.blit(textobj, textrect)
+def title_screen():
+    while True:
+        window.fill(current_scheme["BACKGROUND"])
+        
+        title = font.render('Snake Game', True, current_scheme["TEXT_COLOR"])
+        title_rect = title.get_rect(center=(width//2, height//4))
+        window.blit(title, title_rect)
+        
+        start_text = font.render("Press ENTER to Start", True, current_scheme["SNAKE_COLOR"])
+        start_rect = start_text.get_rect(center=(width//2, height//2 + 20))  # Moved closer to controls
+        window.blit(start_text, start_rect)
+        
+        quit_text = font.render("Press F to Toggle Fullscreen", True, current_scheme["SNAKE_COLOR"])
+        quit_rect = quit_text.get_rect(center=(width//2, height//2 + 60))  # Moved closer to controls
+        window.blit(quit_text, quit_rect)
+
+        # Render controls separately
+        arrow_keys_text = font.render("Arrow keys to move the snake", True, current_scheme["SNAKE_COLOR"])
+        arrow_keys_rect = arrow_keys_text.get_rect(center=(width//2, height//2 + 100))  # Position for arrow keys
+        window.blit(arrow_keys_text, arrow_keys_rect)
+
+        space_text = font.render("Press SPACE to pause the game", True, current_scheme["SNAKE_COLOR"])
+        space_rect = space_text.get_rect(center=(width//2, height//2 + 140))  # Position for space
+        window.blit(space_text, space_rect)
+
+        pygame.display.update()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return True
+                elif event.key == pygame.K_f:  # Change from Q to F
+                    toggle_fullscreen()  # Call the fullscreen toggle function
+                    return True
 
 def speed_selection():
     speed_options = [("Slow", 5), ("Medium", 10), ("Fast", 15)]
@@ -134,7 +182,7 @@ def speed_selection():
                 elif event.key == pygame.K_DOWN:
                     selected = (selected + 1) % len(speed_options)
                 elif event.key == pygame.K_RETURN:
-                    return speed_options[selected][1]
+                    return speed_options[selected][1]  # Return the selected speed value
 
 def color_selection():
     global current_scheme, SNAKE_GRADIENT
@@ -151,17 +199,41 @@ def color_selection():
         for i, scheme in enumerate(color_options):
             color = current_scheme["SNAKE_COLOR"] if i == selected else current_scheme["TEXT_COLOR"]
             option = font.render(scheme, True, color)
-            option_rect = option.get_rect(center=(width//2, height//2 + i * 50))
+            option_rect = option.get_rect(center=(width//2 - 100, height//2 + i * 50))  # Adjusted x-coordinate to move left
             window.blit(option, option_rect)
+        
+        # Draw the large background square for the color preview
+        preview_background_rect = pygame.Rect(width//2 + 100, height//2 - 20, 160, 180)  # Position for the preview
+        pygame.draw.rect(window, current_scheme["SCORE_COLOR"], preview_background_rect)  # Use a color for the background
+
+        # Draw color preview for the selected scheme
+        if selected < len(color_options):
+            scheme = color_options[selected]
+            pygame.draw.rect(window, color_schemes[scheme]["BACKGROUND"], preview_background_rect)
             
-            # Draw color preview for the selected scheme
-            if i == selected:
-                preview_rect = pygame.Rect(width//2 + 150, height//2 - 100, 200, 50)
-                pygame.draw.rect(window, color_schemes[scheme]["BACKGROUND"], preview_rect)
-                pygame.draw.rect(window, color_schemes[scheme]["SNAKE_COLOR"], [preview_rect.x + 10, preview_rect.y + 10, 30, 30])
-                pygame.draw.rect(window, color_schemes[scheme]["FOOD_COLOR"], [preview_rect.x + 60, preview_rect.y + 10, 30, 30])
-                pygame.draw.rect(window, color_schemes[scheme]["TEXT_COLOR"], [preview_rect.x + 110, preview_rect.y + 10, 30, 30])
-                pygame.draw.rect(window, color_schemes[scheme]["SCORE_COLOR"], [preview_rect.x + 160, preview_rect.y + 10, 30, 30])
+            # Draw color squares in their own rows
+            snake_rect = pygame.Rect(preview_background_rect.x + 10, preview_background_rect.y + 10, 30, 30)
+            food_rect = pygame.Rect(preview_background_rect.x + 10, snake_rect.y + 40, 30, 30)
+            text_rect = pygame.Rect(preview_background_rect.x + 10, food_rect.y + 40, 30, 30)
+            score_rect = pygame.Rect(preview_background_rect.x + 10, text_rect.y + 40, 30, 30)
+
+            pygame.draw.rect(window, color_schemes[scheme]["SNAKE_COLOR"], snake_rect)
+            pygame.draw.rect(window, color_schemes[scheme]["FOOD_COLOR"], food_rect)
+            pygame.draw.rect(window, color_schemes[scheme]["TEXT_COLOR"], text_rect)
+            pygame.draw.rect(window, color_schemes[scheme]["SCORE_COLOR"], score_rect)
+            
+            # Draw full words in separate rows below the color squares
+            small_font = pygame.font.SysFont('arial', 20)  # Smaller font size
+            label_s = small_font.render("SNAKE", True, (255, 255, 255))  # White color for visibility
+            label_f = small_font.render("FOOD", True, (255, 255, 255))
+            label_t = small_font.render("TEXT", True, (255, 255, 255))
+            label_sc = small_font.render("SCORE", True, (255, 255, 255))
+            
+            # Position the labels in separate rows
+            window.blit(label_s, (snake_rect.x + 40, snake_rect.y))  # Position next to the square
+            window.blit(label_f, (food_rect.x + 40, food_rect.y))
+            window.blit(label_t, (text_rect.x + 40, text_rect.y))
+            window.blit(label_sc, (score_rect.x + 40, score_rect.y))  # Adjusted to reduce space below the last label
         
         pygame.display.update()
         
@@ -219,16 +291,17 @@ def gameLoop(snake_speed, top_score):
     snake_List = []
     Length_of_snake = 1
 
+    # Ensure food does not spawn in the first two rows
     foodx = round(random.randrange(0, width - snake_block) / 20.0) * 20.0
-    foody = round(random.randrange(40, height - snake_block) / 20.0) * 20.0
+    foody = round(random.randrange(2, int((height - snake_block) // 20.0))) * 20.0 + 40.0  # Start from row 2
 
     score = 0
 
     while not game_over:
         while game_close:
             window.fill(current_scheme["BACKGROUND"])
-            message("Game Over! Press Q-Quit or C-Play Again", current_scheme["TEXT_COLOR"])
-            show_score_and_speed(score, snake_speed, top_score)
+            message("Game Over! Press Q-Quit or C-Play Again", current_scheme["TEXT_COLOR"], y_offset=height / 2)  # Centered vertically
+            show_score_and_speed(score, snake_speed, top_score)  # Show score on game over screen
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -257,6 +330,8 @@ def gameLoop(snake_speed, top_score):
                     x1_change = 0
                 elif event.key == pygame.K_SPACE:
                     pause_game()
+                elif event.key == pygame.K_f:  # Change from Q to F
+                    toggle_fullscreen()  # Call the fullscreen toggle function
 
         # Check if snake hits the boundaries
         if x1 >= width or x1 < 0 or y1 >= height or y1 < 0:
@@ -278,12 +353,13 @@ def gameLoop(snake_speed, top_score):
                 game_close = True
 
         our_snake(snake_block, snake_List)
-        show_score_and_speed(score, snake_speed, top_score)
+        show_score_and_speed(score, snake_speed, top_score)  # Show score during the game
+
         pygame.display.update()
 
         if x1 == foodx and y1 == foody:
             foodx = round(random.randrange(0, width - snake_block) / 20.0) * 20.0
-            foody = round(random.randrange(40, height - snake_block) / 20.0) * 20.0
+            foody = round(random.randrange(2, int((height - snake_block) // 20.0))) * 20.0 + 40.0  # Ensure food spawns in valid area
             Length_of_snake += 1
             score += 10
 
@@ -301,7 +377,9 @@ def gameLoop(snake_speed, top_score):
 def main():
     top_score = load_top_score()  # Load the top score at the start
     while True:
-        color_selection()  # Add color selection menu
+        if not title_screen():  # Add title screen
+            break
+        color_selection()
         selected_speed = speed_selection()
         restart, top_score = gameLoop(selected_speed, top_score)
         if not restart:
