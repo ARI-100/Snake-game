@@ -116,13 +116,23 @@ def show_score_and_speed(score, speed, top_score):
     top_score_rect = top_score_surface.get_rect(topright=(width - 10, common_height))  # Position for top score at the top right
     window.blit(top_score_surface, top_score_rect)
 
+# Load the image at the beginning of your script
+title_image = pygame.image.load('logosnake.png')  # Replace with your image path
+title_image = pygame.transform.scale(title_image, (100, 100))  # Scale the image to a larger size
+
 def title_screen():
     while True:
         window.fill(current_scheme["BACKGROUND"])
         
+        # Render the title
         title = font.render('Snake Game', True, current_scheme["TEXT_COLOR"])
-        title_rect = title.get_rect(center=(width//2, height//4))
-        window.blit(title, title_rect)
+        title_rect = title.get_rect(center=(width//2, height//4 - 20))  # Move title up
+        
+        # Position the title image directly below the title, moved down further
+        image_rect = title_image.get_rect(center=(width//2, title_rect.bottom + 60))  # Increased offset to move down further
+        
+        window.blit(title, title_rect)  # Blit the title text
+        window.blit(title_image, image_rect)  # Blit the image
         
         start_text = font.render("Press ENTER to Start", True, current_scheme["SNAKE_COLOR"])
         start_rect = start_text.get_rect(center=(width//2, height//2 + 20))  # Moved closer to controls
