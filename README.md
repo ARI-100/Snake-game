@@ -27,7 +27,7 @@ This is a simple snake game built with Python.
 
 
 
-![Snake Game Menu](Menu-Image2.png)
+![Snake Game Menu](MenuImage2.png)
 
 ## How to Download and Run the Game
 
